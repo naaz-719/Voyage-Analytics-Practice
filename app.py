@@ -196,7 +196,7 @@ def recommend_hotels(
         hotel_df[
             hotel_df["userCode"]
             == user_id
-        ]["hotel_name"]
+        ]["name"]
 
     )
 
@@ -207,7 +207,7 @@ def recommend_hotels(
         hotels = hotel_df[
             hotel_df["userCode"]
             == sim_user
-        ]["hotel_name"]
+        ]["name"]
 
         for hotel in hotels:
 
@@ -261,7 +261,7 @@ def recommend():
 
         results = hotel_df[
             hotel_df[
-                "hotel_name"
+                "name"
             ].isin(
                 recommended
             )
@@ -277,14 +277,14 @@ def recommend():
         results = results[
             (
                 results[
-                    "hotel_price"
+                    "price"
                 ]
                 >= min_price
             )
             &
             (
                 results[
-                    "hotel_price"
+                    "price"
                 ]
                 <= max_price
             )
@@ -294,7 +294,7 @@ def recommend():
             [
                 "hotel_name",
                 "place",
-                "hotel_price",
+                "price",
                 "days"
             ]
         ].drop_duplicates()
