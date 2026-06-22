@@ -41,7 +41,7 @@ page = st.sidebar.radio(
 
 if page == "Flight Price Prediction":
 
-    ```
+    
     st.title("✈️ Flight Price Prediction")
     st.markdown("Predict airline ticket prices using Machine Learning")
     
@@ -146,7 +146,7 @@ if page == "Flight Price Prediction":
 except Exception as e:
 
     st.error(str(e))
-```
+
 
 # ==================================================
 
