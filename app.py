@@ -223,6 +223,14 @@ def recommend_hotels():
         }), 500
 
 
+
+@app.route("/columns")
+def columns():
+
+    return jsonify({
+        "columns": hotel_df.columns.tolist()
+    })
+
 # ==================================================
 # RUN
 # ==================================================
