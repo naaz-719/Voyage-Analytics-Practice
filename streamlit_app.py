@@ -39,7 +39,7 @@ page = st.sidebar.radio(
 
 # ==================================================
 
-    if page == "Flight Price Prediction":
+if page == "Flight Price Prediction":
 
     ```
     st.title("✈️ Flight Price Prediction")
