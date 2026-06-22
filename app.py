@@ -138,12 +138,19 @@ def predict_flight():
 def flight_options():
 
     return jsonify({
-        "from": flight_encoders["from"].classes_.tolist(),
-        "to": flight_encoders["to"].classes_.tolist(),
-        "flightType": flight_encoders["flightType"].classes_.tolist(),
-        "agency": flight_encoders["agency"].classes_.tolist()
+        "from": sorted(
+            flight_encoders["from"].classes_.tolist()
+        ),
+        "to": sorted(
+            flight_encoders["to"].classes_.tolist()
+        ),
+        "flightType": sorted(
+            flight_encoders["flightType"].classes_.tolist()
+        ),
+        "agency": sorted(
+            flight_encoders["agency"].classes_.tolist()
+        )
     })
-
 # ==================================================
 # GENDER PREDICTION
 # ==================================================
