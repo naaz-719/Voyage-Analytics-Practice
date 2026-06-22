@@ -128,6 +128,17 @@ def predict_flight():
             "error": str(e)
         }), 500
 
+
+@app.route("/flight-options")
+def flight_options():
+
+    return jsonify({
+        "from": flight_encoders["from"].classes_.tolist(),
+        "to": flight_encoders["to"].classes_.tolist(),
+        "flightType": flight_encoders["flightType"].classes_.tolist(),
+        "agency": flight_encoders["agency"].classes_.tolist()
+    })
+
 # ==================================================
 # GENDER PREDICTION
 # ==================================================
