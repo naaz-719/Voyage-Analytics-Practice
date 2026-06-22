@@ -170,64 +170,38 @@ def predict_gender():
         }), 500
 
 
-
 # ==================================================
 # HOTEL RECOMMENDATION
 # ==================================================
 
-def recommend_hotels(user_id, n_recommendations=5):
-
-    if user_id not in user_similarity_df.index:
-        return []
-
-    similar_users = (
-        user_similarity_df.loc[user_id]
-        .sort_values(ascending=False)
-        .iloc[1:6]
-        .index
-    )
-
-    user_hotels = set(
-        hotel_df[
-            hotel_df["userCode"] == user_id
-        ]["hotel_name"]
-    )
-
-    recommendations = []
-
-    for sim_user in similar_users:
-
-        sim_hotels = hotel_df[
-            hotel_df["userCode"] == sim_user
-        ]["hotel_name"].tolist()
-
-        for hotel in sim_hotels:
-
-            if hotel not in user_hotels:
-                recommendations.append(hotel)
-
-    return list(dict.fromkeys(recommendations))[:n_recommendations]
-
-
 @app.route("/recommend-hotels", methods=["POST"])
-def recommend():
+def recommend_hotels():
 
     try:
 
         data = request.json
 
-        user_id = int(data["user_id"])
+        city = data.get("city", None)
 
-        recommendations = recommend_hotels(user_id)
+        min_price = float(data.get("min_price", 0))
 
-        if len(recommendations) == 0:
-            return jsonify({
-                "message": "No recommendations found"
-            })
+        max_price = float(data.get("max_price", 100000))
 
-        results = hotel_df[
-            hotel_df["hotel_name"].isin(recommendations)
-        ][
+        results = hotel_df.copy()
+
+        if city:
+            results = results[
+                results["place"].str.lower()
+                == city.lower()
+            ]
+
+        results = results[
+            (results["hotel_price"] >= min_price)
+            &
+            (results["hotel_price"] <= max_price)
+        ]
+
+        output = results[
             [
                 "hotel_name",
                 "place",
@@ -237,7 +211,9 @@ def recommend():
         ].drop_duplicates()
 
         return jsonify(
-            results.to_dict(orient="records")
+            output.head(10).to_dict(
+                orient="records"
+            )
         )
 
     except Exception as e:
@@ -245,7 +221,6 @@ def recommend():
         return jsonify({
             "error": str(e)
         }), 500
-
 
 
 # ==================================================
