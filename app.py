@@ -250,6 +250,16 @@ def columns():
         "columns": hotel_df.columns.tolist()
     })
 
+
+@app.route("/sample-hotels")
+def sample_hotels():
+
+    return jsonify(
+        hotel_df.head(10).to_dict(
+            orient="records"
+        )
+    )
+
 # ==================================================
 # RUN
 # ==================================================
