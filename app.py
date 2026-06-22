@@ -1,9 +1,8 @@
-
 from flask import Flask, request, jsonify
 import pandas as pd
-import numpy as np
 import joblib
-from sentence_transformers import SentenceTransformer
+
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 
@@ -11,35 +10,43 @@ app = Flask(__name__)
 # LOAD MODELS
 # ==================================================
 
-flight_model = joblib.load("models/flight_price_model.pkl")
+flight_model = joblib.load(
+    "models/flight_price_model.pkl"
+)
 
 flight_encoders = joblib.load(
     "models/flight_encoders.pkl"
 )
 
-gender_model_data = joblib.load(
-    "models/name_gender_classifier.pkl"
+gender_model = joblib.load(
+    "models/gender_model.pkl"
 )
 
-gender_classifier = gender_model_data["classifier"]
-
-gender_encoder = gender_model_data["label_encoder"]
-
-embedding_model = SentenceTransformer(
-    gender_model_data["model_name"]
+gender_tfidf = joblib.load(
+    "models/gender_tfidf.pkl"
 )
 
-
-
-user_similarity_df = joblib.load(
-    "models/user_similarity.pkl"
+gender_label_encoder = joblib.load(
+    "models/gender_label_encoder.pkl"
 )
 
 user_hotel_matrix = joblib.load(
     "models/user_hotel_matrix.pkl"
 )
 
-hotel_df = pd.read_csv("data/hotels.csv")
+hotel_df = pd.read_csv(
+    "data/hotels.csv"
+)
+
+# ==================================================
+# HOTEL SIMILARITY MATRIX
+# ==================================================
+
+user_similarity_df = pd.DataFrame(
+    cosine_similarity(user_hotel_matrix),
+    index=user_hotel_matrix.index,
+    columns=user_hotel_matrix.index
+)
 
 # ==================================================
 # HOME
@@ -65,47 +72,61 @@ def home():
 @app.route("/predict-flight", methods=["POST"])
 def predict_flight():
 
-    data = request.json
+    try:
 
-    from_city = data["from"]
-    to_city = data["to"]
-    flight_type = data["flightType"]
-    agency = data["agency"]
-    time = float(data["time"])
-    distance = float(data["distance"])
+        data = request.json
 
-    from_num = flight_encoders["from"].transform(
-        [from_city]
-    )[0]
+        from_city = data["from"]
+        to_city = data["to"]
+        flight_type = data["flightType"]
+        agency = data["agency"]
+        time = float(data["time"])
+        distance = float(data["distance"])
 
-    to_num = flight_encoders["to"].transform(
-        [to_city]
-    )[0]
+        from_num = flight_encoders["from"].transform(
+            [from_city]
+        )[0]
 
-    flight_type_num = flight_encoders["flightType"].transform(
-        [flight_type]
-    )[0]
+        to_num = flight_encoders["to"].transform(
+            [to_city]
+        )[0]
 
-    agency_num = flight_encoders["agency"].transform(
-        [agency]
-    )[0]
+        flight_type_num = flight_encoders[
+            "flightType"
+        ].transform(
+            [flight_type]
+        )[0]
 
-    input_data = pd.DataFrame([{
-        "from_num": from_num,
-        "to_num": to_num,
-        "flightType_num": flight_type_num,
-        "agency_num": agency_num,
-        "time": time,
-        "distance": distance
-    }])
+        agency_num = flight_encoders[
+            "agency"
+        ].transform(
+            [agency]
+        )[0]
 
-    prediction = flight_model.predict(
-        input_data
-    )[0]
+        input_df = pd.DataFrame([{
+            "from_num": from_num,
+            "to_num": to_num,
+            "flightType_num": flight_type_num,
+            "agency_num": agency_num,
+            "time": time,
+            "distance": distance
+        }])
 
-    return jsonify({
-        "predicted_price": round(float(prediction), 2)
-    })
+        prediction = flight_model.predict(
+            input_df
+        )[0]
+
+        return jsonify({
+            "predicted_price": round(
+                float(prediction), 2
+            )
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 # ==================================================
 # GENDER PREDICTION
@@ -122,17 +143,20 @@ def predict_gender():
 
         first_name = name.split()[0]
 
-        embedding = embedding_model.encode(
+        features = gender_tfidf.transform(
             [first_name]
         )
 
-        prediction = gender_classifier.predict(
-            embedding
+        prediction = gender_model.predict(
+            features
         )[0]
 
-        gender = gender_encoder.inverse_transform(
-            [prediction]
-        )[0]
+        gender = (
+            gender_label_encoder
+            .inverse_transform(
+                [prediction]
+            )[0]
+        )
 
         return jsonify({
             "name": name,
@@ -146,22 +170,34 @@ def predict_gender():
         }), 500
 
 # ==================================================
-# HOTEL RECOMMENDATION
+# HOTEL RECOMMENDER
 # ==================================================
 
-def recommend_hotels(user_id, n_recommendations=5):
+def recommend_hotels(
+    user_id,
+    n_recommendations=5
+):
+
+    if user_id not in user_similarity_df.index:
+
+        return []
 
     similar_users = (
         user_similarity_df[user_id]
-        .sort_values(ascending=False)
+        .sort_values(
+            ascending=False
+        )
         .iloc[1:6]
         .index
     )
 
     user_hotels = set(
+
         hotel_df[
-            hotel_df["userCode"] == user_id
+            hotel_df["userCode"]
+            == user_id
         ]["hotel_name"]
+
     )
 
     recommendations = []
@@ -169,70 +205,119 @@ def recommend_hotels(user_id, n_recommendations=5):
     for sim_user in similar_users:
 
         hotels = hotel_df[
-            hotel_df["userCode"] == sim_user
+            hotel_df["userCode"]
+            == sim_user
         ]["hotel_name"]
 
         for hotel in hotels:
 
             if hotel not in user_hotels:
-                recommendations.append(hotel)
 
-    return list(set(recommendations))[:n_recommendations]
+                recommendations.append(
+                    hotel
+                )
 
-@app.route("/recommend-hotels", methods=["POST"])
+    return list(
+        set(recommendations)
+    )[:n_recommendations]
+
+# ==================================================
+# HOTEL ENDPOINT
+# ==================================================
+
+@app.route(
+    "/recommend-hotels",
+    methods=["POST"]
+)
 def recommend():
 
-    data = request.json
+    try:
 
-    user_id = int(data["user_id"])
+        data = request.json
 
-    city = data.get("city")
+        user_id = int(
+            data["user_id"]
+        )
 
-    min_price = float(
-        data.get("min_price", 0)
-    )
+        city = data.get("city")
 
-    max_price = float(
-        data.get("max_price", 10000)
-    )
+        min_price = float(
+            data.get(
+                "min_price",
+                0
+            )
+        )
 
-    recommended = recommend_hotels(user_id)
+        max_price = float(
+            data.get(
+                "max_price",
+                10000
+            )
+        )
 
-    results = hotel_df[
-        hotel_df["hotel_name"].isin(recommended)
-    ]
+        recommended = recommend_hotels(
+            user_id
+        )
 
-    if city:
+        results = hotel_df[
+            hotel_df[
+                "hotel_name"
+            ].isin(
+                recommended
+            )
+        ]
+
+        if city:
+
+            results = results[
+                results["place"]
+                == city
+            ]
+
         results = results[
-            results["place"] == city
+            (
+                results[
+                    "hotel_price"
+                ]
+                >= min_price
+            )
+            &
+            (
+                results[
+                    "hotel_price"
+                ]
+                <= max_price
+            )
         ]
 
-    results = results[
-        (results["hotel_price"] >= min_price)
-        &
-        (results["hotel_price"] <= max_price)
-    ]
+        output = results[
+            [
+                "hotel_name",
+                "place",
+                "hotel_price",
+                "days"
+            ]
+        ].drop_duplicates()
 
-    output = results[
-        [
-            "hotel_name",
-            "place",
-            "hotel_price",
-            "days"
-        ]
-    ].drop_duplicates()
+        return jsonify(
+            output.to_dict(
+                orient="records"
+            )
+        )
 
-    return jsonify(
-        output.to_dict(orient="records")
-    )
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 # ==================================================
 # RUN
 # ==================================================
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
-        port=5000,
-        debug=True
+        port=5000
     )
