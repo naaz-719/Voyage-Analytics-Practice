@@ -106,7 +106,7 @@ if page == "Flight Price Prediction":
                 value=1000
             )
 
-    if st.button("Predict Flight Price"):
+if st.button("Predict Flight Price"):
 
         payload = {
             "from": from_city,
@@ -156,7 +156,6 @@ except Exception as e:
 
 elif page == "Gender Prediction":
 
-```
 st.title("👤 Gender Prediction")
 st.markdown(
     "Predict gender from first names using Machine Learning"
@@ -201,8 +200,8 @@ if st.button("Predict Gender"):
 
             else:
 
-                st.error(result)
-```
+                   st.error(result)
+
 
 # ==================================================
 
@@ -212,7 +211,6 @@ if st.button("Predict Gender"):
 
 elif page == "Hotel Recommendation":
 
-```
 st.title("🏨 Hotel Recommendation")
 st.markdown(
     "Discover hotels based on city and budget"
@@ -307,7 +305,7 @@ if st.button("Find Hotels"):
             st.warning(
                 "No hotels found for selected filters."
             )
-```
+
 
 st.sidebar.markdown("---")
 st.sidebar.info(
