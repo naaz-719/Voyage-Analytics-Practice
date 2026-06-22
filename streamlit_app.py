@@ -39,72 +39,72 @@ page = st.sidebar.radio(
 
 # ==================================================
 
-if page == "Flight Price Prediction":
+    if page == "Flight Price Prediction":
 
-```
-st.title("✈️ Flight Price Prediction")
-st.markdown("Predict airline ticket prices using Machine Learning")
+    ```
+    st.title("✈️ Flight Price Prediction")
+    st.markdown("Predict airline ticket prices using Machine Learning")
+    
+    try:
+    
+        options = requests.get(
+            f"{API_URL}/flight-options"
+        ).json()
+    
+        col1, col2 = st.columns(2)
+    
+        with col1:
+    
+            from_city = st.selectbox(
+                "From City",
+                options["from"]
+            )
 
-try:
-
-    options = requests.get(
-        f"{API_URL}/flight-options"
-    ).json()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        from_city = st.selectbox(
-            "From City",
-            options["from"]
-        )
-
-    with col2:
-
-        to_options = [
-            city for city in options["to"]
-            if city != from_city
-        ]
-
-        to_city = st.selectbox(
-            "To City",
-            to_options
-        )
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-
-        flight_type = st.selectbox(
-            "Flight Type",
-            options["flightType"]
-        )
-
-    with col4:
-
-        agency = st.selectbox(
-            "Agency",
-            options["agency"]
-        )
-
-    col5, col6 = st.columns(2)
-
-    with col5:
-
-        time = st.number_input(
-            "Flight Duration (Hours)",
-            min_value=0.0,
-            value=1.5
-        )
-
-    with col6:
-
-        distance = st.number_input(
-            "Distance (KM)",
-            min_value=0,
-            value=1000
-        )
+        with col2:
+    
+            to_options = [
+                city for city in options["to"]
+                if city != from_city
+            ]
+    
+            to_city = st.selectbox(
+                "To City",
+                to_options
+            )
+    
+        col3, col4 = st.columns(2)
+    
+        with col3:
+    
+            flight_type = st.selectbox(
+                "Flight Type",
+                options["flightType"]
+            )
+    
+        with col4:
+    
+            agency = st.selectbox(
+                "Agency",
+                options["agency"]
+            )
+    
+        col5, col6 = st.columns(2)
+    
+        with col5:
+    
+            time = st.number_input(
+                "Flight Duration (Hours)",
+                min_value=0.0,
+                value=1.5
+            )
+    
+        with col6:
+    
+            distance = st.number_input(
+                "Distance (KM)",
+                min_value=0,
+                value=1000
+            )
 
     if st.button("Predict Flight Price"):
 
