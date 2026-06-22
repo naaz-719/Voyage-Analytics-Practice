@@ -1,13 +1,9 @@
-FROM python:3.11-slim
+## Docker Deployment
 
-WORKDIR /app
+Build Image
 
-COPY . /app
+docker build -t voyage-analytics .
 
-RUN pip install --upgrade pip
+Run Container
 
-RUN pip install -r requirements.txt
-
-EXPOSE 5000
-
-CMD ["python", "app.py"]
+docker run -p 5000:5000 voyage-analytics
