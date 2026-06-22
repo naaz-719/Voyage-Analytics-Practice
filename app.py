@@ -216,16 +216,16 @@ def recommend_hotels():
             ]
 
         results = results[
-            (results["hotel price"] >= min_price)
+            (results["price"] >= min_price)
             &
-            (results["hotel price"] <= max_price)
+            (results["price"] <= max_price)
         ]
 
         output = results[
             [
-                "hotel_name",
+                "name",
                 "place",
-                "hotel price",
+                "price",
                 "days"
             ]
         ].drop_duplicates()
