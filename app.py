@@ -11,14 +11,14 @@ app = Flask(__name__)
 # LOAD MODELS
 # ==================================================
 
-flight_model = joblib.load("/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/models/flight_price_model.pkl")
+flight_model = joblib.load("models/flight_price_model.pkl")
 
 flight_encoders = joblib.load(
-    "/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/models/flight_encoders.pkl"
+    "models/flight_encoders.pkl"
 )
 
 gender_model_data = joblib.load(
-    "/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/models/name_gender_classifier.pkl"
+    "models/name_gender_classifier.pkl"
 )
 
 gender_classifier = gender_model_data["classifier"]
@@ -32,14 +32,14 @@ embedding_model = SentenceTransformer(
 
 
 user_similarity_df = joblib.load(
-    "/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/models/user_similarity.pkl"
+    "models/user_similarity.pkl"
 )
 
 user_hotel_matrix = joblib.load(
-    "/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/models/user_hotel_matrix.pkl"
+    "models/user_hotel_matrix.pkl"
 )
 
-hotel_df = pd.read_csv("/content/drive/MyDrive/Voyage Analytics: Integrating MLOps in Travel/data/hotels.csv")
+hotel_df = pd.read_csv("data/hotels.csv")
 
 # ==================================================
 # HOME
