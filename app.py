@@ -236,7 +236,7 @@ def recommend():
         data = request.json
 
         user_id = int(
-            data["user_id"]
+            data["userCode"]
         )
 
         city = data.get("city")
