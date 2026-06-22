@@ -38,6 +38,11 @@ hotel_df = pd.read_csv(
     "data/hotels.csv"
 )
 
+hotel_df.columns = (
+    hotel_df.columns
+    .str.strip()
+)
+
 # ==================================================
 # HOTEL SIMILARITY MATRIX
 # ==================================================
@@ -194,9 +199,13 @@ def recommend_hotels():
 
         city = data.get("city", None)
 
-        min_price = float(data.get("min_price", 0))
+        min_price = float(
+            data.get("min_price", 0)
+        )
 
-        max_price = float(data.get("max_price", 100000))
+        max_price = float(
+            data.get("max_price", 100000)
+        )
 
         results = hotel_df.copy()
 
@@ -232,7 +241,6 @@ def recommend_hotels():
         return jsonify({
             "error": str(e)
         }), 500
-
 
 
 @app.route("/columns")
