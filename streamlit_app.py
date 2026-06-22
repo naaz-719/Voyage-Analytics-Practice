@@ -2,12 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# ==================================================
-
-# PAGE CONFIG
-
-# ==================================================
-
 st.set_page_config(
 page_title="Voyage Analytics",
 page_icon="✈️",
@@ -15,12 +9,6 @@ layout="wide"
 )
 
 API_URL = "https://voyage-analytics-practice-2.onrender.com"
-
-# ==================================================
-
-# SIDEBAR
-
-# ==================================================
 
 st.sidebar.title("✈️ Voyage Analytics")
 
@@ -41,72 +29,65 @@ page = st.sidebar.radio(
 
 if page == "Flight Price Prediction":
 
-    
-    st.title("✈️ Flight Price Prediction")
-    st.markdown("Predict airline ticket prices using Machine Learning")
-    
-    try:
-    
-        options = requests.get(
-            f"{API_URL}/flight-options"
-        ).json()
-    
-        col1, col2 = st.columns(2)
-    
-        with col1:
-    
-            from_city = st.selectbox(
-                "From City",
-                options["from"]
-            )
+```
+st.title("✈️ Flight Price Prediction")
 
-        with col2:
-    
-            to_options = [
-                city for city in options["to"]
-                if city != from_city
-            ]
-    
-            to_city = st.selectbox(
-                "To City",
-                to_options
-            )
-    
-        col3, col4 = st.columns(2)
-    
-        with col3:
-    
-            flight_type = st.selectbox(
-                "Flight Type",
-                options["flightType"]
-            )
-    
-        with col4:
-    
-            agency = st.selectbox(
-                "Agency",
-                options["agency"]
-            )
-    
-        col5, col6 = st.columns(2)
-    
-        with col5:
-    
-            time = st.number_input(
-                "Flight Duration (Hours)",
-                min_value=0.0,
-                value=1.5
-            )
-    
-        with col6:
-    
-            distance = st.number_input(
-                "Distance (KM)",
-                min_value=0,
-                value=1000
-            )
+try:
 
-if st.button("Predict Flight Price"):
+    options = requests.get(
+        f"{API_URL}/flight-options"
+    ).json()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        from_city = st.selectbox(
+            "From City",
+            options["from"]
+        )
+
+    with col2:
+        to_options = [
+            city for city in options["to"]
+            if city != from_city
+        ]
+
+        to_city = st.selectbox(
+            "To City",
+            to_options
+        )
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        flight_type = st.selectbox(
+            "Flight Type",
+            options["flightType"]
+        )
+
+    with col4:
+        agency = st.selectbox(
+            "Agency",
+            options["agency"]
+        )
+
+    col5, col6 = st.columns(2)
+
+    with col5:
+        time = st.number_input(
+            "Flight Duration (Hours)",
+            min_value=0.0,
+            value=1.5
+        )
+
+    with col6:
+        distance = st.number_input(
+            "Distance (KM)",
+            min_value=0,
+            value=1000
+        )
+
+    if st.button("Predict Flight Price"):
 
         payload = {
             "from": from_city,
@@ -117,36 +98,28 @@ if st.button("Predict Flight Price"):
             "distance": distance
         }
 
-        with st.spinner(
-            "Predicting..."
-        ):
+        response = requests.post(
+            f"{API_URL}/predict-flight",
+            json=payload
+        )
 
-            response = requests.post(
-                f"{API_URL}/predict-flight",
-                json=payload
+        result = response.json()
+
+        if "predicted_price" in result:
+
+            st.success("Prediction Complete!")
+
+            st.metric(
+                "Predicted Flight Price",
+                f"${result['predicted_price']}"
             )
 
-            result = response.json()
-
-            if "predicted_price" in result:
-
-                st.success(
-                    "Prediction Complete!"
-                )
-
-                st.metric(
-                    "Predicted Flight Price",
-                    f"${result['predicted_price']}"
-                )
-
-            else:
-
-                st.error(result)
+        else:
+            st.error(result)
 
 except Exception as e:
-
     st.error(str(e))
-
+```
 
 # ==================================================
 
@@ -156,10 +129,8 @@ except Exception as e:
 
 elif page == "Gender Prediction":
 
+```
 st.title("👤 Gender Prediction")
-st.markdown(
-    "Predict gender from first names using Machine Learning"
-)
 
 name = st.text_input(
     "Enter Name",
@@ -168,40 +139,27 @@ name = st.text_input(
 
 if st.button("Predict Gender"):
 
-    if name:
+    response = requests.post(
+        f"{API_URL}/predict-gender",
+        json={"name": name}
+    )
 
-        with st.spinner(
-            "Predicting..."
-        ):
+    result = response.json()
 
-            response = requests.post(
-                f"{API_URL}/predict-gender",
-                json={
-                    "name": name
-                }
-            )
+    if "predicted_gender" in result:
 
-            result = response.json()
+        st.success(
+            f"Predicted Gender: {result['predicted_gender']}"
+        )
 
-            if "predicted_gender" in result:
+        st.metric(
+            "Prediction",
+            result["predicted_gender"]
+        )
 
-                gender = result[
-                    "predicted_gender"
-                ]
-
-                st.success(
-                    f"Predicted Gender: {gender.title()}"
-                )
-
-                st.metric(
-                    "Prediction",
-                    gender.title()
-                )
-
-            else:
-
-                   st.error(result)
-
+    else:
+        st.error(result)
+```
 
 # ==================================================
 
@@ -211,27 +169,19 @@ if st.button("Predict Gender"):
 
 elif page == "Hotel Recommendation":
 
+```
 st.title("🏨 Hotel Recommendation")
-st.markdown(
-    "Discover hotels based on city and budget"
+
+city = st.text_input(
+    "City",
+    placeholder="Salvador (BH)"
 )
 
-col1, col2 = st.columns(2)
-
-with col1:
-
-    city = st.text_input(
-        "City",
-        placeholder="Salvador (BH)"
-    )
-
-with col2:
-
-    max_price = st.number_input(
-        "Maximum Price",
-        min_value=0,
-        value=500
-    )
+max_price = st.number_input(
+    "Maximum Price",
+    min_value=0,
+    value=500
+)
 
 if st.button("Find Hotels"):
 
@@ -241,74 +191,30 @@ if st.button("Find Hotels"):
         "max_price": max_price
     }
 
-    with st.spinner(
-        "Searching hotels..."
-    ):
+    response = requests.post(
+        f"{API_URL}/recommend-hotels",
+        json=payload
+    )
 
-        response = requests.post(
-            f"{API_URL}/recommend-hotels",
-            json=payload
+    hotels = response.json()
+
+    if isinstance(hotels, list) and len(hotels) > 0:
+
+        df = pd.DataFrame(hotels)
+
+        st.dataframe(
+            df,
+            use_container_width=True
         )
 
-        hotels = response.json()
-
-        if len(hotels) > 0:
-
-            st.success(
-                f"{len(hotels)} Hotels Found"
-            )
-
-            df = pd.DataFrame(
-                hotels
-            )
-
-            st.dataframe(
-                df,
-                use_container_width=True
-            )
-
-            st.subheader(
-                "Hotel Cards"
-            )
-
-            for hotel in hotels:
-
-                with st.container():
-
-                    st.markdown("---")
-
-                    c1, c2, c3 = st.columns(
-                        [3, 2, 1]
-                    )
-
-                    with c1:
-                        st.write(
-                            f"🏨 {hotel['name']}"
-                        )
-
-                    with c2:
-                        st.write(
-                            f"📍 {hotel['place']}"
-                        )
-
-                    with c3:
-                        st.write(
-                            f"${hotel['price']}"
-                        )
-
-                    st.write(
-                        f"🛏️ Stay Duration: {hotel['days']} days"
-                    )
-
-        else:
-
-            st.warning(
-                "No hotels found for selected filters."
-            )
-
+    else:
+        st.warning(
+            "No hotels found."
+        )
+```
 
 st.sidebar.markdown("---")
 st.sidebar.info(
-"Built with Flask API + Streamlit + Machine Learning"
+"Built with Flask + Streamlit + Machine Learning"
 )
 
