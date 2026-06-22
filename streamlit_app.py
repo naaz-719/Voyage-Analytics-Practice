@@ -14,6 +14,13 @@ st.set_page_config(
 
 API_URL = "https://voyage-analytics-practice-2.onrender.com"
 
+# Load flight dataset
+flights_df = pd.read_csv("data/flights.csv")
+
+# Session state
+if "destination_city" not in st.session_state:
+    st.session_state.destination_city = ""
+
 # ==================================================
 # SIDEBAR
 # ==================================================
@@ -21,7 +28,7 @@ API_URL = "https://voyage-analytics-practice-2.onrender.com"
 st.sidebar.title("✈️ Voyage Analytics")
 
 page = st.sidebar.selectbox(
-    "Choose Module",
+    "Select Module",
     [
         "Flight Price Prediction",
         "Gender Prediction",
@@ -36,6 +43,7 @@ page = st.sidebar.selectbox(
 if page == "Flight Price Prediction":
 
     st.title("✈️ Flight Price Prediction")
+    st.markdown("Predict airline ticket prices using Machine Learning")
 
     try:
 
@@ -52,6 +60,7 @@ if page == "Flight Price Prediction":
             )
 
         with col2:
+
             to_options = [
                 city
                 for city in options["to"]
@@ -63,37 +72,65 @@ if page == "Flight Price Prediction":
                 to_options
             )
 
+        # Save destination for hotel page
+        st.session_state.destination_city = to_city
+
+        # Find route info automatically
+        route = flights_df[
+            (flights_df["from"] == from_city)
+            &
+            (flights_df["to"] == to_city)
+        ]
+
+        if not route.empty:
+
+            distance = float(
+                route.iloc[0]["distance"]
+            )
+
+            time = float(
+                route.iloc[0]["time"]
+            )
+
+        else:
+
+            distance = 0
+            time = 0
+
+        st.markdown("### Route Information")
+
         col3, col4 = st.columns(2)
 
         with col3:
-            flight_type = st.selectbox(
-                "Flight Type",
-                options["flightType"]
+            st.metric(
+                "Distance (KM)",
+                f"{distance:.2f}"
             )
 
         with col4:
-            agency = st.selectbox(
-                "Agency",
-                options["agency"]
+            st.metric(
+                "Duration (Hours)",
+                f"{time:.2f}"
             )
 
         col5, col6 = st.columns(2)
 
         with col5:
-            time = st.number_input(
-                "Flight Duration (Hours)",
-                min_value=0.0,
-                value=2.0
+            flight_type = st.selectbox(
+                "Flight Type",
+                options["flightType"]
             )
 
         with col6:
-            distance = st.number_input(
-                "Distance (KM)",
-                min_value=0,
-                value=1000
+            agency = st.selectbox(
+                "Agency",
+                options["agency"]
             )
 
-        if st.button("Predict Flight Price"):
+        if st.button(
+            "Predict Flight Price",
+            use_container_width=True
+        ):
 
             payload = {
                 "from": from_city,
@@ -113,7 +150,9 @@ if page == "Flight Price Prediction":
 
             if "predicted_price" in result:
 
-                st.success("Prediction Complete")
+                st.success(
+                    "Prediction Complete"
+                )
 
                 st.metric(
                     "Predicted Price",
@@ -121,9 +160,11 @@ if page == "Flight Price Prediction":
                 )
 
             else:
+
                 st.error(result)
 
     except Exception as e:
+
         st.error(str(e))
 
 # ==================================================
@@ -133,12 +174,18 @@ if page == "Flight Price Prediction":
 elif page == "Gender Prediction":
 
     st.title("👤 Gender Prediction")
+    st.markdown(
+        "Predict gender using Machine Learning"
+    )
 
     name = st.text_input(
         "Enter Name"
     )
 
-    if st.button("Predict Gender"):
+    if st.button(
+        "Predict Gender",
+        use_container_width=True
+    ):
 
         if name:
 
@@ -158,6 +205,7 @@ elif page == "Gender Prediction":
                 )
 
             else:
+
                 st.error(result)
 
 # ==================================================
@@ -168,17 +216,30 @@ elif page == "Hotel Recommendation":
 
     st.title("🏨 Hotel Recommendation")
 
-    city = st.text_input(
-        "City"
-    )
+    city = st.session_state.destination_city
+
+    if city:
+
+        st.info(
+            f"Showing hotels in: {city}"
+        )
+
+    else:
+
+        st.warning(
+            "Please select a destination city from Flight Prediction first."
+        )
 
     max_price = st.number_input(
-        "Maximum Price",
+        "Maximum Budget",
         min_value=0,
         value=500
     )
 
-    if st.button("Find Hotels"):
+    if st.button(
+        "Find Hotels",
+        use_container_width=True
+    ):
 
         payload = {
             "city": city,
@@ -199,17 +260,26 @@ elif page == "Hotel Recommendation":
                 f"{len(hotels)} Hotels Found"
             )
 
+            df = pd.DataFrame(
+                hotels
+            )
+
             st.dataframe(
-                pd.DataFrame(hotels),
+                df,
                 use_container_width=True
             )
 
         else:
+
             st.warning(
-                "No hotels found."
+                "No hotels found for this city and budget."
             )
 
+# ==================================================
+# FOOTER
+# ==================================================
+
 st.sidebar.markdown("---")
-st.sidebar.info(
-    "Built with Flask API + Streamlit + Machine Learning"
+st.sidebar.success(
+    "Flask API + Streamlit + Machine Learning"
 )
